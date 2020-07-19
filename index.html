@@ -71,10 +71,10 @@
 
             $('form').submit(function (e) {
                 e.preventDefault(); // prevents page reloading
-                let a = { "is_group": false, "message": "hello", "receiver_phone": "9588558818", "sender_phone": "7206475015", "status": 0 }
+                let a = { "isGroup": false, "message": "hello", "receiverPhone": "9588558818", "senderPhone": "7206475015", "status": 0 }
                 a.message = $('#m').val()
-                a.sender_phone = user.phone
-                a.receiver_phone = "7206475015"
+                a.senderPhone = user.phone
+                a.receiverPhone = "7206475015"
                 socket.emit('input', JSON.stringify(a));
                 // console.log({phone:"9588558818",message: $('#m').val()})
                 $('#m').val('');
@@ -82,8 +82,9 @@
             });
             socket.on('output', function (data) {
                 console.log(JSON.stringify(data))
+                $('#messages').append($('<li>').text(data['message']));
                 data.forEach(element => {
-                $('#messages').append($('<li>').text(element['message']));
+               
                     
                 });
             });

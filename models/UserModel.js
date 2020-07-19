@@ -1,0 +1,35 @@
+'use strict';
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+
+const UserSchema = new Schema({
+    name: {
+        type: String,
+        required: 'Kindly Enter The Name'
+    },
+    phone: {
+        type: String,
+        required: "Kindly Enter Phone",
+        unique: true
+    },
+    countryCode: {
+        type: String,
+        default: "+91"
+    },
+    about: {
+        type: String,
+        default: "Hey There, I am using MadApp"
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    status: {
+        type: String,
+        enum: [0, 1, 2, 3, 4],
+        default: 1
+    }
+});
+
+module.exports = mongoose.model('Users', UserSchema);
