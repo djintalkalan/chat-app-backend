@@ -1,19 +1,21 @@
 {
   "name": "chat-app-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "backend for chat app",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
     "mongod": "brew services start mongodb-community"
   },
-  "author": "",
+  "author": "Deepak Jaglan",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.15.2",
     "mongodb": "^3.5.9",
-    "socket.io": "^2.3.0"
+    "mongoose": "^5.9.24",
+    "socket.io": "^2.3.0",
+    "validator": "^13.1.1"
   }
 }
