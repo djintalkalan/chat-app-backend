@@ -29,6 +29,9 @@ const MessageSchema = new Schema({
         type: String,
         required: 'Kindly Enter Message'
     },
+    tempId: {
+        type: String,
+    },
     status: {
         type: String,
         enum: [0, 1, 2, 3, 4],

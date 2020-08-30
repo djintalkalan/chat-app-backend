@@ -21,6 +21,10 @@ const UserSchema = new Schema({
         type: String,
         default: "Hey There, I am using MadApp"
     },
+    groups: {
+        type: [Schema.Types.ObjectId],
+        default: []
+    },
     date: {
         type: Date,
         default: Date.now

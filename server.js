@@ -1,9 +1,11 @@
-const app = require('express')();
+const express = require('express');
+const app = express();
 const http = require('http').createServer(app);
 
 const BodyParser = require("body-parser");
-app.use(BodyParser.json());
-app.use(BodyParser.urlencoded({ extended: true }));
+app.use(BodyParser.json({limit: '50mb'}));
+app.use(BodyParser.urlencoded({ extended: true,limit: '50mb' }));
+app.use(express.static(__dirname + '/public'));
 
 require('./mongoose/Database')(http);
 require('./models/UserModel');
