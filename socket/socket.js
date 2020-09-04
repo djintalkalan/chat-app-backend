@@ -7,6 +7,7 @@ let mongoose = require('mongoose');
 
 let User = mongoose.model('Users');
 let Chat = mongoose.model('Chats');
+let Group = mongoose.model('Groups');
 
 module.exports = function (http) {
     const io = require('socket.io')(http);
@@ -14,21 +15,28 @@ module.exports = function (http) {
         socket.on('input', (inputData) => {
             inputData = JSON.parse(inputData)
             console.log("input", inputData);
-            // inputData.message = inputData.message.toString("utf-8")
             let input_chat = new Chat(inputData)
             input_chat.save((error, result) => {
                 if (error) {
                     throw error
                 }
                 try {
-                    let messageReceiver = connectedUsers.find((item, index) => {
-                        return item.phone === inputData.receiverPhone
-                    })
-                    console.log("input result :", JSON.stringify(result))
-                    if (messageReceiver) {
-                        io.to(messageReceiver.socketId).emit('output', result);
+                    if (!inputData.isGroup) {
+                        let messageReceiver = connectedUsers.find((item, index) => {
+                            return item.phone === inputData.receiverPhone
+                        })
+                        console.log("input result :", JSON.stringify(result))
+                        if (messageReceiver) {
+                            io.to(messageReceiver.socketId).emit('output', result);
+                        }
+                        socket.emit('markedSent', result)
                     }
-                    socket.emit('markedSent', result)
+                    else {
+                        const rooms = Object.keys(socket.rooms);
+                        console.log(rooms)
+                        socket.broadcast.to(inputData.groupId).emit('output', result);
+                        socket.emit('markedSent', result)
+                    }
                 }
                 catch (e) {
                     console.log("IOERROR : ", e)
@@ -62,6 +70,23 @@ module.exports = function (http) {
                     if (result && result.length > 0)
                         socket.emit('outputOld', result)
                 }).sort({ _id: 1 });
+                User.find({ phone: data.phone }, (err, result) => {
+                    if (result && result.length > 0) {
+                        Group.find({ _id: { $in: result[0].groups } }, (er, re) => {
+                            socket.emit("groupList", re)
+                            re.forEach(element => {
+                                socket.join(element._id);
+                            });
+                            Chat.find({ $and: [{ groupId: { $in: re } }, { groupStatusReceived: { $nin: [data.phone] } }] }, (e, r) => {
+                                if (r && r.length > 0)
+                                    socket.emit('outputOld', r)
+
+                            })
+                        })
+                    }
+
+                })
+
             }
             catch (e) {
                 console.log(e)
@@ -70,14 +95,13 @@ module.exports = function (http) {
         });
 
         socket.on('markReceived', (data) => {
-            console.log("markReceived : ", data)
+            // console.log("markReceived : ", data)
             Chat.update(
                 { _id: { "$in": data } }, { $set: { "status": "1" } }, { "multi": true }).then((product) => {
                     data.forEach(element => {
                         let eventReceiver = connectedUsers.filter((item, index) => {
                             return item.phone === element.senderPhone || item.phone === element.receiverPhone
                         })
-                        // console.log("eventReceiver", eventReceiver);
                         if (eventReceiver) {
                             io.to(eventReceiver[0].socketId).emit('markedReceived', element);
                             io.to(eventReceiver[1].socketId).emit('markedReceived', element);
@@ -86,6 +110,26 @@ module.exports = function (http) {
 
                 });
         });
+
+        socket.on('markReceivedGroup', (data) => {
+            // console.log("markReceivedGroup : ", data)
+            Chat.update(
+                { $and: [{ _id: { "$in": data.receivedList } }, { "groupStatusReceived": { $nin: [data.phone] } }] }, { $push: { "groupStatusReceived": data.phone } }, { "multi": true }).then((product) => {
+                    io.to(data.receivedList[0].groupId).emit('markedReceivedGroup', data.receivedList);
+                    console.log("markReceivedGroup", product)
+                });
+        });
+
+        socket.on('markReadGroup', (data) => {
+            // console.log("markReadGroup : ", data)
+            Chat.updateMany(
+                { $and: [{ _id: { "$in": data.unreadList } }, { "groupStatusRead": { $nin: [data.phone] } }] }, { "multi": true }).then((product) => {
+                    io.to(data.unreadList[0].groupId).emit('markReadGroup', data.unreadList);
+                    console.log("markReadGroupGroup", product)
+                });
+        });
+
+
 
         socket.on('markRead', function (data) {
             console.log("markRead : ", data)
@@ -146,6 +190,28 @@ module.exports = function (http) {
 
             }
         });
+
+        socket.on("changeInGroup", d => {
+            const data = JSON.parse(d)
+
+            data.users.forEach(element => {
+                let connectedIndex
+                connectedIndex = connectedUsers.findIndex((item, index) => {
+                    if (item.phone == element) {
+                        connectedIndex = index
+                        return true
+                    }
+                    return false
+                })
+                console.log("connectedIndex", connectedIndex)
+                if (connectedIndex > -1) {
+                    let socketId = connectedUsers[connectedIndex].socketId
+                    console.log("socketId", socketId)
+
+                    io.to(socketId).emit('changeGroup', data);
+                }
+            });
+        })
 
         var unicodeToChar = function (text) {
             return text.replace(/\\u[\dA-F]{4}/gi, function (match) {

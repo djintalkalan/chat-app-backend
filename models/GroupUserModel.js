@@ -10,7 +10,6 @@ const GroupUserSchema = new Schema({
     },
     name: {
         type: String,
-        required: 'Kindly Enter The Name'
     },
     isAdmin: {
         type: Boolean,
@@ -34,15 +33,11 @@ const GroupUserSchema = new Schema({
         default: Date.now
     },
     status: {
-        type: [{
-            type: String,
-            enum: [0, 1, 2, 3, 4]
-        }],
-        default: [1]
+        type: String,
+        enum: [0, 1, 2, 3, 4],
+        default: 1
     },
-    lastOnline: {
-        type: Date,
-    }
+
 }, { _id: false });
 
 module.exports = mongoose.model('GroupUsers', GroupUserSchema);

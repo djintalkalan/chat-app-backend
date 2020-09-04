@@ -36,7 +36,15 @@ const MessageSchema = new Schema({
         type: String,
         enum: [0, 1, 2, 3, 4],
         default: 0
-    }
+    },
+    groupStatusReceived: {
+        type: [String],
+        default: []
+    },
+    groupStatusRead: {
+        type: [String],
+        default: []
+    },
 });
 
 module.exports = mongoose.model('Chats', MessageSchema);
