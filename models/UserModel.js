@@ -17,6 +17,9 @@ const UserSchema = new Schema({
         type: String,
         default: "+91"
     },
+    profilePic: {
+        type: String,
+    },
     about: {
         type: String,
         default: "Hey There, I am using MadApp"

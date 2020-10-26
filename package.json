@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
+    "start2": "nodemon --inspect server.js",
     "mongod": "brew services start mongodb-community"
   },
   "author": "Deepak Jaglan",

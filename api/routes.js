@@ -5,10 +5,30 @@ module.exports = function (app) {
     let usersList = require('../controllers/UserController');
     let fileUpload = require('../controllers/FileUploadController');
     let groupController = require('../controllers/GroupController');
+    let path = require('path');
 
-    app.get('/', (req, res) => {
-        res.sendFile(require('path').dirname(process.mainModule.filename) + "/index.html");
+    // app.get('/', (req, res) => {
+    //     res.sendFile(path.dirname(process.mainModule.filename) + "/index.html");
+    // });
+
+    app.get('/download/:name', (req, res) => {
+        res.sendFile(path.resolve(`${__dirname}/../uploads/` + req.params.name));
     });
+
+    app.get('/photo/:id', (req, res) => {
+        var filename = req.params.id;
+
+        db.collection('mycollection').findOne({ '_id': ObjectId(filename) }, (err, result) => {
+
+            if (err) return console.log(err)
+
+            res.contentType('image/jpeg');
+            res.send(result.image.buffer)
+
+
+        })
+    })
+
     app.route('/sync-contacts')
         .post(usersList.sync_contacts);
 

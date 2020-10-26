@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
     cb(null, 'uploads')
   },
   filename: function (req, file, cb) {
-    console.log("FILE_DETAILS : ", file)
+    // console.log("FILE_DETAILS : ", file)
     cb(null, file.originalname)
   }
 })
@@ -29,4 +29,5 @@ exports.uploadFiles = (req, res, next) => {
   }
   res.json(files)
 
+  console.log("FILE_DETAILS : ", files)
 }

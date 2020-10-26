@@ -27,7 +27,6 @@ const MessageSchema = new Schema({
     },
     message: {
         type: String,
-        required: 'Kindly Enter Message'
     },
     tempId: {
         type: String,
@@ -45,6 +44,9 @@ const MessageSchema = new Schema({
         type: [String],
         default: []
     },
+    serverAttachment:{
+        type:String,
+    }
 });
 
 module.exports = mongoose.model('Chats', MessageSchema);

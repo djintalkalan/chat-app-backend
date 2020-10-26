@@ -82,7 +82,6 @@ exports.login = (req, res) => {
         success: true
       }
       console.log("Payload", payload)
-
       res.json(payload);
     }
     else {

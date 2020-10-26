@@ -4,6 +4,7 @@ let connectedUsers = []
 
 
 let mongoose = require('mongoose');
+const { ObjectId } = require('mongodb');
 
 let User = mongoose.model('Users');
 let Chat = mongoose.model('Chats');
@@ -111,6 +112,8 @@ module.exports = function (http) {
                 });
         });
 
+
+
         socket.on('markReceivedGroup', (data) => {
             // console.log("markReceivedGroup : ", data)
             Chat.update(
@@ -167,6 +170,28 @@ module.exports = function (http) {
 
             }
             io.emit("markUserStatusChanged", data)
+        });
+
+        socket.on('profileUpdate', (data) => {
+            console.log("profileUpdate : ", data)
+            const updateObj = {
+                "name": data.name,
+                "profilePic": data.profilePic,
+                "about": data.about
+            }
+
+            console.log("profileUpdate : ", data)
+
+
+            User.updateOne({ phone: data.phone }, updateObj, (err, doc) => {
+                console.log("error : ", err)
+                console.log("doc : ", doc)
+                if (!err) {
+                    socket.emit("selfProfileUpdated", data)
+                }
+            })
+
+
         });
 
         socket.on('fetchUserStatus', function (data) {
