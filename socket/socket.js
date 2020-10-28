@@ -66,7 +66,7 @@ module.exports = function (http) {
                 // else {
                 //     connectedUsers.push({ ...data, socketId: socket.id })
                 // }
-                connected.set(data.phone,{ ...data, socketId: socket.id })
+                connected.set(data.phone, { ...data, socketId: socket.id })
                 console.log("CONNECTED_USERS : ", connected)
                 Chat.find({ $and: [{ receiverPhone: data.phone }, { status: "0" }] }, (err, result) => {
                     if (err) {
@@ -107,13 +107,11 @@ module.exports = function (http) {
                         // let eventReceiver = connectedUsers.filter((item, index) => {
                         //     return item.phone === element.senderPhone || item.phone === element.receiverPhone
                         // })
-                        let eventReceiver = []
-                        eventReceiver.push(connected.get(element.senderPhone))
-                        eventReceiver.push(connected.get(element.receiverPhone))
-                        if (eventReceiver) {
-                            io.to(eventReceiver[0].socketId).emit('markedReceived', element);
-                            io.to(eventReceiver[1].socketId).emit('markedReceived', element);
-                        }
+                        let senderId = connected.get(element.senderPhone)?.socketId
+                        let receiverId = connected.get(element.receiverPhone)?.socketId
+                        if (senderId) io.to(senderId).emit('markedReceived', element);
+                        if (receiverId) io.to(receiverId).emit('markedReceived', element);
+                      
                     });
 
                 });
@@ -149,21 +147,17 @@ module.exports = function (http) {
                         // let eventReceiver = connectedUsers.filter((item, index) => {
                         //     return item.phone === element.senderPhone || item.phone === element.receiverPhone
                         // })
-                        let eventReceiver = []
-                        eventReceiver.push(connected.get(element.senderPhone))
-                        eventReceiver.push(connected.get(element.receiverPhone))
-                        // console.log("markReadReceiver", eventReceiver);
-                        if (eventReceiver) {
-                            io.to(eventReceiver[0].socketId).emit('markedRead', element);
-                            io.to(eventReceiver[1].socketId).emit('markedRead', element);
-                        }
+                        let senderId = connected.get(element.senderPhone)?.socketId
+                        let receiverId = connected.get(element.receiverPhone)?.socketId
+                        if (senderId) io.to(senderId).emit('markedRead', element);
+                        if (receiverId) io.to(receiverId).emit('markedRead', element);
                     });
                 });
         });
 
         socket.on('userStatusChanges', function (data) {
             // console.log("userStatusChanges : ", data)
-            connected.set(data.phone,Object.assign(connected.get(data.phone),{isOnlineTag: data.isOnlineTag, lastSeenTag: data.lastSeenTag}))
+            connected.set(data.phone, Object.assign(connected.get(data.phone), { isOnlineTag: data.isOnlineTag, lastSeenTag: data.lastSeenTag }))
             // let connectedIndex
             // connectedIndex = connectedUsers.findIndex((item, index) => {
             //     if (item.phone == data.phone) {
@@ -226,21 +220,20 @@ module.exports = function (http) {
 
             // }
             let user = connected.get(data)
-            if(user){
-            const { _id, isOnlineTag, lastSeenTag } = user
-            socket.emit("resultFetchUserStatus", { _id, isOnlineTag, lastSeenTag })
+            if (user) {
+                const { _id, isOnlineTag, lastSeenTag } = user
+                socket.emit("resultFetchUserStatus", { _id, isOnlineTag, lastSeenTag })
             }
         });
 
         socket.on("changeInGroup", d => {
             const data = JSON.parse(d)
-
             data.users.forEach(element => {
                 let user = connected.get(element)
-                if(user){
-                console.log("socketId", user.socketId)
+                if (user) {
+                    console.log("socketId", user.socketId)
 
-                io.to(user.socketId).emit('changeGroup', data);
+                    io.to(user.socketId).emit('changeGroup', data);
                 }
                 // let connectedIndex
                 // connectedIndex = connectedUsers.findIndex((item, index) => {
