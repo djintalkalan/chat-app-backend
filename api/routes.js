@@ -3,6 +3,7 @@
 
 module.exports = function (app) {
     let usersList = require('../controllers/UserController');
+    let OtpController = require('../controllers/OtpController');
     let fileUpload = require('../controllers/FileUploadController');
     let groupController = require('../controllers/GroupController');
     let path = require('path');
@@ -48,6 +49,13 @@ module.exports = function (app) {
         .post(groupController.get_group);
 
     app.route('/upload-files').post(fileUpload.upload.array('myFile', 100), fileUpload.uploadFiles)
+
+    app.route('/send-otp')
+        .post(OtpController.send_otp);
+
+    app.route('/verify-otp')
+        .post(OtpController.verify_otp)
+
 
 
 };

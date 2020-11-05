@@ -112,8 +112,7 @@ module.exports = function (http) {
                             let receiverId = connected.get(element.receiverPhone).socketId
                             if (senderId) io.to(senderId).emit('markedReceived', element);
                             if (receiverId) io.to(receiverId).emit('markedReceived', element);
-                    } catch (e) { console.log(e)}
-                       
+                        } catch (e) { console.log(e) }
 
                     });
 
@@ -153,9 +152,9 @@ module.exports = function (http) {
                         try {
                             let senderId = connected.get(element.senderPhone).socketId
                             let receiverId = connected.get(element.receiverPhone).socketId
-                        if (senderId) io.to(senderId).emit('markedRead', element);
-                        if (receiverId) io.to(receiverId).emit('markedRead', element);
-                    } catch (e) { console.log(e)}
+                            if (senderId) io.to(senderId).emit('markedRead', element);
+                            if (receiverId) io.to(receiverId).emit('markedRead', element);
+                        } catch (e) { console.log(e) }
                     });
                 });
         });
