@@ -109,7 +109,7 @@ exports.verify_otp = (req, res) => {
 }
 
 const callSendOTPApi = (phone, otp) => {
-  // return
+  return
   let message = "Your MadApp code is " + otp + " \nDon't share this code with others.";
   let URL = "http://hissarsms.com/API/SMSHttp.aspx?UserId=vinayasija&pwd=pwd2020&Message=" + message + "&Contacts=" + phone + "&SenderId=MADAPP&ServiceName=SMSOTP"
   fetch(URL)

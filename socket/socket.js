@@ -11,6 +11,7 @@ const { ObjectId } = require('mongodb');
 let User = mongoose.model('Users');
 let Chat = mongoose.model('Chats');
 let Group = mongoose.model('Groups');
+let moment = require('moment')
 
 module.exports = function (http) {
     const io = require('socket.io')(http);
@@ -161,24 +162,11 @@ module.exports = function (http) {
 
         socket.on('userStatusChanges', function (data) {
             // console.log("userStatusChanges : ", data)
-            connected.set(data.phone, Object.assign(connected.get(data.phone), { isOnlineTag: data.isOnlineTag, lastSeenTag: data.lastSeenTag }))
-            // let connectedIndex
-            // connectedIndex = connectedUsers.findIndex((item, index) => {
-            //     if (item.phone == data.phone) {
-            //         connectedIndex = index
-            //         return true
-            //     }
-            //     return false
-            // })
-
-            // if (connectedIndex >= 0) {
-            //     let temp = JSON.parse(JSON.stringify(connectedUsers[connectedIndex]))
-            //     connectedUsers[connectedIndex] = { ...temp, isOnlineTag: data.isOnlineTag, lastSeenTag: data.lastSeenTag }
-            // }
-            // else {
-
-            // }
-            io.emit("markUserStatusChanged", data)
+            let d = connected.get(data.phone)
+            d = { ...d, isOnlineTag: data.isOnlineTag, lastSeenTag: moment() }
+            connected.set(data.phone, d)
+            // console.log("userStatusChanges", connected.get(data.phone))
+            io.emit("markUserStatusChanged", d)
         });
 
         socket.on('profileUpdate', (data) => {
@@ -203,7 +191,7 @@ module.exports = function (http) {
 
         });
 
-        socket.on('fetchUserStatus', function (data) {
+        socket.on('fetchUserStatus', function (phone) {
             // console.log("fetchUserStatus : ", data)
             // let connectedIndex
             // connectedIndex = connectedUsers.findIndex((item, index) => {
@@ -223,10 +211,11 @@ module.exports = function (http) {
             // else {
 
             // }
-            let user = connected.get(data)
+            let user = connected.get(phone)
             if (user) {
                 const { _id, isOnlineTag, lastSeenTag } = user
-                socket.emit("resultFetchUserStatus", { _id, isOnlineTag, lastSeenTag })
+                socket.emit("resultFetchUserStatus", { _id, isOnlineTag, lastSeenTag, phone })
+                // console.log("resultFetchUserStatus", user)
             }
         });
 
@@ -264,16 +253,17 @@ module.exports = function (http) {
         }
 
 
+        socket.on('typing', (data) => {
+            console.log("Typing : ", data)
+            let user = connected.get(JSON.stringify(data.to))
+            console.log("Typing : ", user)
 
-
-
+            if (user && user.socketId) {
+                io.to(user.socketId).emit('typing', data);
+            }
+        })
 
         socket.on('disconnect', function () {
-            // let disconnectedUserIndex = connectedUsers.findIndex((item, index) => {
-            //     return item.socketId == socket.id
-            // })
-            // console.log("\n" + connectedUsers[disconnectedUserIndex].name + ' Disconnected\n',);
-            // // connectedUsers.splice(disconnectedUserIndex, 1)
             console.log("CONNECTED_USERS : ", connectedUsers)
         });
 
