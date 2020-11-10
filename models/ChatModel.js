@@ -28,6 +28,10 @@ const MessageSchema = new Schema({
     message: {
         type: String,
     },
+    isSticker: {
+        type: Boolean,
+        default: false
+    },
     tempId: {
         type: String,
     },
@@ -44,8 +48,8 @@ const MessageSchema = new Schema({
         type: [String],
         default: []
     },
-    serverAttachment:{
-        type:String,
+    serverAttachment: {
+        type: String,
     }
 });
 
