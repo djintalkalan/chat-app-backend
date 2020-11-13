@@ -25,6 +25,7 @@ exports.get_groups = (req, res) => {
 };
 
 exports.get_group = (req, res) => {
+  console.log("Get Group Req",req)
   Group.findById( req.body.phone, (err, result) => {
     if (err) {
       const payload = {
