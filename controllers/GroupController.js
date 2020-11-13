@@ -38,6 +38,7 @@ exports.get_group = (req, res) => {
       success: true,
     }
     res.json(payload);
+    console.log("Get Group",payload)
   });
 };
 
