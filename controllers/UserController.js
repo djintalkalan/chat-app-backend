@@ -33,7 +33,7 @@ exports.sync_contacts = (req, res) => {
   })
 }
 
-exports.update_profile = (req, res) => {
+exports.update_profile = async (req, res) => {
   const { phone, name, about } = req.body
   const filter = { phone };
   const update = { name, about };
