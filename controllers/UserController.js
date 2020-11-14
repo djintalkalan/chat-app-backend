@@ -7,7 +7,7 @@ let User = mongoose.model('Users');
 
 
 exports.sync_contacts = (req, res) => {
-  var locs = req.body.contacts.map((x) => { return x.phone });
+  let locs = req.body.contacts.map((x) => { return x.phone });
   User.find({ "phone": { "$in": locs } }, (err, result) => {
     if (err) {
       const payload = {
@@ -31,6 +31,33 @@ exports.sync_contacts = (req, res) => {
       res.json(payload);
     }
   })
+}
+
+exports.update_profile = (req, res) => {
+  const { phone, name, about } = req.body
+  const filter = { phone };
+  const update = { name, about };
+
+  // `doc` is the document _after_ `update` was applied because of
+  // `new: true`
+  let doc = await User.findOneAndUpdate(filter, update, { new: true }, (err) => {
+    if (err) {
+      const payload = {
+        data: null,
+        success: false,
+        error: err
+      }
+      return res.status(500).json(payload);
+    }
+  });
+  if (doc) {
+    const payload = {
+      data: doc,
+      success: true
+    }
+    console.log(payload)
+    res.json(payload);
+  }
 }
 
 exports.get_users = (req, res) => {

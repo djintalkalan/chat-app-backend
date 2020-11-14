@@ -42,6 +42,9 @@ module.exports = function (app) {
     app.route('/login')
         .post(usersList.login);
 
+    app.route('/update-profile')
+        .post(usersList.update_profile);
+
     app.route('/create-group')
         .post(groupController.createGroup);
 
