@@ -167,6 +167,27 @@ module.exports = function (http) {
 
         });
 
+        socket.on('groupProfileUpdate', (data) => {
+            console.log("groupProfileUpdate : ", data)
+            const updateObj = {
+                "name": data.name,
+                "profilePic": data.profilePic,
+            }
+
+            console.log("profileUpdate : ", data)
+            Group.updateOne({ _id: data._id }, updateObj, (err, doc) => {
+                console.log("error : ", err)
+                console.log("doc : ", doc)
+                if (!err) {
+                    const rooms = Object.keys(socket.rooms);
+                    console.log(rooms)
+                    socket.broadcast.to(data._id).emit('groupProfileUpdated', data);
+                }
+            })
+
+
+        });
+
         socket.on('fetchUserStatus', function (phone) {
             let user = connected.get(phone)
             if (user) {

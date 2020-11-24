@@ -7,6 +7,7 @@ let User = mongoose.model('Users');
 
 
 exports.sync_contacts = (req, res) => {
+  // console.log("Synced Contacts",req.body)
   let locs = req.body.contacts.map((x) => { return x.phone });
   User.find({ "phone": { "$in": locs } }, (err, result) => {
     if (err) {
@@ -27,7 +28,7 @@ exports.sync_contacts = (req, res) => {
         data: result,
         success: true
       }
-      // console.log(payload)
+      // console.log("Synced Contacts",payload)
       res.json(payload);
     }
   })

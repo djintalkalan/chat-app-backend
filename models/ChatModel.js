@@ -25,8 +25,12 @@ const MessageSchema = new Schema({
         type: Date,
         default: Date.now
     },
+    replyOn: {
+        type: Object
+    },
     message: {
         type: String,
+        default:null
     },
     isSticker: {
         type: Boolean,
