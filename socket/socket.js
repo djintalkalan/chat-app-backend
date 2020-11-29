@@ -121,6 +121,8 @@ module.exports = function (http) {
 
 
 
+
+
         socket.on('markRead', function (data) {
             console.log("markRead : ", data)
             Chat.update(
@@ -179,12 +181,63 @@ module.exports = function (http) {
                 console.log("error : ", err)
                 console.log("doc : ", doc)
                 if (!err) {
-                    const rooms = Object.keys(socket.rooms);
-                    console.log(rooms)
-                    socket.broadcast.to(data._id).emit('groupProfileUpdated', data);
+                    io.to(data._id).emit('groupProfileUpdated', data);
                 }
             })
 
+
+        });
+
+        socket.on('addMembersInGroup', (data) => {
+            console.log("addMembersInGroup : ", data)
+            let userList = JSON.parse(data.list);
+            Group.findByIdAndUpdate(
+                data.id,
+                { $addToSet: { users: { $each: userList } } },
+                { new: true },
+                (err, doc) => {
+                    console.log("updated", doc)
+                    if (!err) {
+                        io.to(data.id).emit('groupProfileUpdated', doc);
+                        User.updateMany({ phone: { "$in": userList } }, { $addToSet: { groups: data.id } }, { multi: true }, (err, raw) => {
+                            // console.log(err)
+                            // console.log(raw)
+                            userList.forEach(element => {
+                                let user = connected.get(JSON.stringify(element))
+                                if (user && user.socketId) {
+                                    io.to(user.socketId).emit('changeGroup', doc);
+                                }
+                            });
+                        })
+                    }
+                    // console.log(err)
+                }
+            )
+
+        });
+
+        socket.on('leaveGroup', (data) => {
+            console.log("leaveGroup : ", data)
+            Group.findByIdAndUpdate(
+                data.id,
+                { $pull: { users: data.phone, adminList: data.phone } },
+                { new: true },
+                (err, doc) => {
+                    console.log("updated", doc)
+                    if (!err) {
+                        io.to(data.id).emit('groupProfileUpdated', doc);
+                        User.updateOne({ phone: data.phone }, { $pull: { groups: data.id } }, (err, raw) => {
+                            if (!err) {
+                                let user = connected.get(data.phone)
+                                if (user && user.socketId) {
+                                    io.to(user.socketId).emit('groupProfileUpdated', doc);
+                                }
+                            }
+                        })
+                    }
+
+                }
+            )
 
         });
 
