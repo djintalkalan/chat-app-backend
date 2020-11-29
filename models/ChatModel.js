@@ -30,7 +30,7 @@ const MessageSchema = new Schema({
     },
     message: {
         type: String,
-        default:null
+        default: null
     },
     isSticker: {
         type: Boolean,
@@ -54,7 +54,12 @@ const MessageSchema = new Schema({
     },
     serverAttachment: {
         type: String,
+    },
+    groupMembers: {
+        type: [String],
+        default: []
     }
+
 });
 
 module.exports = mongoose.model('Chats', MessageSchema);

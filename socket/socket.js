@@ -16,9 +16,17 @@ let moment = require('moment')
 module.exports = function (http) {
     const io = require('socket.io')(http);
     io.on('connection', (socket) => {
-        socket.on('input', (inputData) => {
+        socket.on('input', async (inputData) => {
             inputData = JSON.parse(inputData)
             console.log("input", inputData);
+            if (inputData.isGroup) {
+                await Group.findById(inputData.groupId, (err, doc) => {
+                    if (!err) {
+                        // console.log("Group is", doc)
+                        inputData.groupMembers = doc.users
+                    }
+                })
+            }
             let input_chat = new Chat(inputData)
             input_chat.save((error, result) => {
                 if (error) {
@@ -34,8 +42,6 @@ module.exports = function (http) {
                         socket.emit('markedSent', result)
                     }
                     else {
-                        const rooms = Object.keys(socket.rooms);
-                        console.log(rooms)
                         socket.broadcast.to(inputData.groupId).emit('output', result);
                         socket.emit('markedSent', result)
                     }
@@ -65,7 +71,11 @@ module.exports = function (http) {
                             re.forEach(element => {
                                 socket.join(element._id);
                             });
-                            Chat.find({ $and: [{ groupId: { $in: re } }, { groupStatusReceived: { $nin: [data.phone] } }] }, (e, r) => {
+                            Chat.find({ $and: [{ groupId: { $in: re } }, { groupStatusReceived: { $nin: [data.phone] } }, { groupMembers: data.phone }] }, (e, r) => {
+                                if (e) {
+                                    console.log("Error ", e)
+                                }
+                                console.log("result of message", r)
                                 if (r && r.length > 0)
                                     socket.emit('outputOld', r)
 
