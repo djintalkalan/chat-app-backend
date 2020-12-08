@@ -218,6 +218,8 @@ module.exports = function (http) {
                                     io.to(user.socketId).emit('changeGroup', doc);
                                 }
                             });
+                            
+                            socket.emit("onMemberAdded",true)
                         })
                     }
                     // console.log(err)

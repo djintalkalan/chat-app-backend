@@ -112,7 +112,7 @@ const callSendOTPApi = (phone, otp) => {
   console.log("OTP IS "+otp)
   //return
   let message = "Your MadApp code is " + otp + " \nDon't share this code with others.";
-  let URL = "http://hissarsms.com/API/SMSHttp.aspx?UserId=vinayasija&pwd=pwd2020&Message=" + message + "&Contacts=" + phone + "&SenderId=MADAPP&ServiceName=SMSOTP"
+  let URL = "http://hissarsms.com/API/SMSHttp.aspx?UserId=vinayasija&pwd=pwd2020&Message=" + message + "&Contacts=" + phone + "&SenderId=MAADAP&ServiceName=SMSOTP"
   fetch(URL)
     .then(
       (response) => {
