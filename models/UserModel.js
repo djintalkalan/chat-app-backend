@@ -36,6 +36,9 @@ const UserSchema = new Schema({
         type: String,
         enum: [0, 1, 2, 3, 4],
         default: 1
+    },
+    deviceToken: {
+        type: String,
     }
 });
 

@@ -12,6 +12,7 @@ let User = mongoose.model('Users');
 let Chat = mongoose.model('Chats');
 let Group = mongoose.model('Groups');
 let moment = require('moment')
+const fetch = require("node-fetch");
 
 module.exports = function (http) {
     const io = require('socket.io')(http);
@@ -37,13 +38,41 @@ module.exports = function (http) {
                         let messageReceiver = connected.get(inputData.receiverPhone)
                         console.log("input result :", JSON.stringify(result))
                         if (messageReceiver) {
+                            if (!messageReceiver.isOnlineTag) {
+                                if (messageReceiver.deviceToken)
+                                    wakeViaFirebase([messageReceiver.deviceToken])
+                            }
                             io.to(messageReceiver.socketId).emit('output', result);
                         }
                         socket.emit('markedSent', result)
+                        if (!messageReceiver) {
+                            User.findOne({ phone: inputData.receiverPhone }, 'deviceToken -_id').then((res, err) => {
+                                console.log(res)
+                                let deviceToken = []
+                                if (res && res.deviceToken) {
+                                        deviceToken.push(res.deviceToken)
+                                }
+                                if (deviceToken.length > 0) {
+                                    wakeViaFirebase(deviceToken)
+                                }
+                            })
+                        }
                     }
                     else {
                         socket.broadcast.to(inputData.groupId).emit('output', result);
                         socket.emit('markedSent', result)
+                        User.find({ phone: { $in: inputData.groupMembers } }, 'deviceToken -_id').then((res, err) => {
+                            let deviceToken = []
+                            if (res && res.length > 0) {
+                                res.forEach((d) => {
+                                    deviceToken.push(d.deviceToken)
+                                })
+                            }
+                            if (deviceToken.length > 0) {
+                                wakeViaFirebase(deviceToken)
+                            }
+                        })
+
                     }
                 }
                 catch (e) {
@@ -53,10 +82,10 @@ module.exports = function (http) {
         });
 
         socket.on("online", (data) => {
-            console.log(data.name + " Connected");
+            console.log(data.name, " Connected");
             try {
-                connected.set(data.phone, { ...data, socketId: socket.id })
-                console.log("CONNECTED_USERS : ", connected)
+                connected.set(data.phone, { ...data, socketId: socket.id, isOnlineTag: true, lastSeenTag: null })
+                console.log("CONNECTED_USERS : ", connected.size)
                 Chat.find({ $and: [{ receiverPhone: data.phone }, { status: "0" }] }, (err, result) => {
                     if (err) {
                         throw err
@@ -75,7 +104,7 @@ module.exports = function (http) {
                                 if (e) {
                                     console.log("Error ", e)
                                 }
-                                console.log("result of message", r)
+                                // console.log("result of message", r)
                                 if (r && r.length > 0)
                                     socket.emit('outputOld', r)
 
@@ -83,6 +112,10 @@ module.exports = function (http) {
                         })
                     }
 
+                })
+                User.updateOne({ phone: data.phone }, { deviceToken: data.deviceToken }, (err, raw) => {
+                    // console.log("ERROR",err)
+                    // console.log("raw",raw)
                 })
 
             }
@@ -218,8 +251,8 @@ module.exports = function (http) {
                                     io.to(user.socketId).emit('changeGroup', doc);
                                 }
                             });
-                            
-                            socket.emit("onMemberAdded",true)
+
+                            socket.emit("onMemberAdded", true)
                         })
                     }
                     // console.log(err)
@@ -292,10 +325,73 @@ module.exports = function (http) {
         })
 
         socket.on('disconnect', function () {
-            console.log("CONNECTED_USERS : ", connectedUsers)
+            try {
+                // console.log("CONNECTED_USERS : ", connectedUsers)
+                console.log(socket.id)
+                let phone
+                connected.forEach((v, k) => {
+                    if (v.socketId == socket.id) {
+                        phone = k
+                    }
+                })
+                console.log(phone)
+                if (phone) {
+                    let d = { ...connected.get(phone), isOnlineTag: false, lastSeenTag: moment() }
+                    connected.set(phone, d)
+                    // console.log("userStatusChanges", connected.get(data.phone))
+                    io.emit("markUserStatusChanged", d)
+                    console.log("CONNECTED_USERS : ", connected)
+
+                }
+            } catch (error) {
+
+            }
         });
 
 
     });
 
 };
+
+const wakeViaFirebase = token => {
+    let data = {
+        registration_ids: token,
+        data: {
+            title: "MadApp",
+            body: "Looking for new messages",
+            type: "Wake",
+        }
+    }
+    const URL = "https://fcm.googleapis.com/fcm/send"
+    const serverKey = "AAAAsa3ugXo:APA91bFfrBRkzikaR_tH38asaFqFNwsPq_vnktS4JIcJEqtMwifZBInZ8MYisEI04r7_r95cXB8b89o7GaEcW6VO_85DaWg92R9gbfh8jTJZNdo8GymUZbedx95r-_mjazgx2b53grYy"
+
+    // console.log("REQUEST IS ", data);
+
+    fetch(URL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: "key=" + serverKey
+        }
+    })
+        .then(
+            (response) => {
+                // console.log("RESPONSE IS ", response);
+
+                if (response.status !== 200) {
+                    console.log('Looks like there was a problem. Status Code: ' +
+                        response.status);
+                    return;
+                }
+
+                // Examine the text in the response
+                response.json().then((data) => {
+                    // console.log(data);
+                });
+            }
+        )
+        .catch((err) => {
+            // console.log('Fetch Error :-S', err);
+        });
+}
