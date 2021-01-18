@@ -39,18 +39,20 @@ module.exports = function (http) {
                         console.log("input result :", JSON.stringify(result))
                         if (messageReceiver) {
                             if (!messageReceiver.isOnlineTag) {
-                                if (messageReceiver.deviceToken)
+                                if (messageReceiver.deviceToken) {
+                                    console.log("messageReceiver :", JSON.stringify(messageReceiver))
                                     wakeViaFirebase([messageReceiver.deviceToken])
+                                }
                             }
                             io.to(messageReceiver.socketId).emit('output', result);
                         }
                         socket.emit('markedSent', result)
-                        if (!messageReceiver) {
+                        if (!messageReceiver || !messageReceiver.deviceToken) {
                             User.findOne({ phone: inputData.receiverPhone }, 'deviceToken -_id').then((res, err) => {
                                 console.log(res)
                                 let deviceToken = []
                                 if (res && res.deviceToken) {
-                                        deviceToken.push(res.deviceToken)
+                                    deviceToken.push(res.deviceToken)
                                 }
                                 if (deviceToken.length > 0) {
                                     wakeViaFirebase(deviceToken)
@@ -365,7 +367,7 @@ const wakeViaFirebase = token => {
     const URL = "https://fcm.googleapis.com/fcm/send"
     const serverKey = "AAAAsa3ugXo:APA91bFfrBRkzikaR_tH38asaFqFNwsPq_vnktS4JIcJEqtMwifZBInZ8MYisEI04r7_r95cXB8b89o7GaEcW6VO_85DaWg92R9gbfh8jTJZNdo8GymUZbedx95r-_mjazgx2b53grYy"
 
-    // console.log("REQUEST IS ", data);
+    console.log("REQUEST IS ", data);
 
     fetch(URL, {
         method: "POST",
@@ -377,7 +379,7 @@ const wakeViaFirebase = token => {
     })
         .then(
             (response) => {
-                // console.log("RESPONSE IS ", response);
+                console.log("RESPONSE IS ", response);
 
                 if (response.status !== 200) {
                     console.log('Looks like there was a problem. Status Code: ' +
