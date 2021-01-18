@@ -379,7 +379,7 @@ const wakeViaFirebase = token => {
     })
         .then(
             (response) => {
-                console.log("RESPONSE IS ", response);
+                // console.log("RESPONSE IS ", response);
 
                 if (response.status !== 200) {
                     console.log('Looks like there was a problem. Status Code: ' +
@@ -389,7 +389,7 @@ const wakeViaFirebase = token => {
 
                 // Examine the text in the response
                 response.json().then((data) => {
-                    // console.log(data);
+                    console.log('RESPONSE IS',data);
                 });
             }
         )
